@@ -1,11 +1,14 @@
 import './App.css';
-import Students from './components/students';
+
+import Form from "./components/form"
+import ListContacts from './components/contactlist';
 
 function App() {
   return (
     <div className="App">
       Hello from Techtonica
-      <Students />
+      <Form />
+      <ListContacts />
     </div>
   );
 }

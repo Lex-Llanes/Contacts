@@ -5,7 +5,7 @@ const db = require('../server/db/db-connection.js');
 
 const app = express();
 
-const PORT = 5000;
+const PORT = 8080;
 app.use(cors());
 app.use(express.json());
 
@@ -14,36 +14,67 @@ app.get('/', (req, res) => {
     res.json({ message: 'Hello from My ExpressJS' });
 });
 
-//create the get request
-app.get('/api/students', cors(), async (req, res) => {
-    // const STUDENTS = [
 
-    //     { id: 1, firstName: 'Lisa', lastName: 'Lee' },
-    //     { id: 2, firstName: 'Eileen', lastName: 'Long' },
-    //     { id: 3, firstName: 'Fariba', lastName: 'Dako' },
-    //     { id: 4, firstName: 'Cristina', lastName: 'Rodriguez' },
-    //     { id: 5, firstName: 'Andrea', lastName: 'Trejo' },
-    // ];
-    // res.json(STUDENTS);
-    try{
-        const { rows: students } = await db.query('SELECT * FROM students');
-        res.send(students);
-    } catch (e){
-        return res.status(400).json({e});
+/*++++++++++++++++
+------ROUTES------
+*****************/
+
+
+//ADD CONTACT INFO ROUTE
+app.post('/contact', async (req, res) => {
+    try {
+        const { firstName } = req.body;
+        const { lastName } = req.body;
+        const { contactEmail } = req.body;
+        const { contactNumber } = req.body;
+        const { contactNotes } = req.body;
+
+        const newContact = await db.query (
+            'INSERT INTO contactinfo(last_name, first_name, email, phone_number, notes) VALUES($1, $2, $3, $4, $5) RETURNING *', 
+            [lastName, firstName, contactEmail, contactNumber, contactNotes]
+        )
+
+        res.json(newContact.rows[0])
+    } catch (error) {
+        console.error(error.message)
     }
-});
+})
 
-//create the POST request
-app.post('/api/students', cors(), async (req, res) => {
-    const newUser = { firstname: req.body.firstname, lastname: req.body.lastname }
-    console.log([newUser.firstname, newUser.lastname]);
-    const result = await db.query(
-        'INSERT INTO students(firstname, lastname) VALUES($1, $2) RETURNING *',
-        [newUser.firstname, newUser.lastname]
-    );
-    console.log(result.rows[0]);
-    res.json(result.rows[0]);
-});
+
+//GET ALL CONTACTS ROUTE
+app.get('/contact',  async (req, res) => {
+    try {
+        const allContacts = await db.query('SELECT * FROM contactinfo');
+
+        res.json(allContacts.rows)
+    } catch (error) {
+        console.error(error.message)
+    }
+})
+
+
+//UPDATE A CONTACT
+app.put('/contact/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { firstName } = req.body;
+        const { lastName } = req.body;
+        const { contactEmail } = req.body;
+        const { contactNumber } = req.body;
+        const { contactNotes } = req.body;
+
+        //We will use an update query to update contact informations
+        const updateContact = await db.query(
+            'UPDATE contactinfo SET last_name = $1, first_name = $2, email = $3, phone_number = $4, notes = $5 WHERE contact_id = $6',
+            [lastName, firstName, contactEmail, contactNumber, contactNotes, id]
+        )
+    } catch (error) {
+        console.error(error.message)
+    }
+})
+
+
+
 
 // console.log that your server is up and running
 app.listen(PORT, () => {
